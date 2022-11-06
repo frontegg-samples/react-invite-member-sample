@@ -21,7 +21,7 @@ You will be also able to simply add a role field based on the code you will find
 
 #### Copy invite link method
 
-```
+```ts
 import { useCallback, useState, useEffect } from 'react';
 
 export const InviteModal = ({ onClose }) => {
