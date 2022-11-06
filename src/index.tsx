@@ -7,15 +7,14 @@ import './index.css';
 import { FronteggProvider } from '@frontegg/react';
 
 const contextOptions = {
-    baseUrl: 'https://app-na8f2nf315s2.stg.frontegg.com',
-    clientId: 'f2d98a73-6925-4e17-8e4c-1f579811d2a8'
+    baseUrl: 'https://samples-demo.frontegg.com',
 };
 
 // For react 18:
 // const root = ReactDOM.createRoot(document.getElementById('root'));
 // root.render(
 ReactDOM.render(
-    <FronteggProvider contextOptions={contextOptions}>
+    <FronteggProvider contextOptions={contextOptions} hostedLoginBox={true}>
         <App />
     </FronteggProvider>,
     document.getElementById('root')

@@ -66,7 +66,7 @@ const InviteButtonStyled = styled(Button)<InviteButtonStyledProps>(({isSent, the
     },
 }));
 
-export const InviteModal: VFC<InviteModalProps> = ({ onClose }) => {
+export const InviteModal = ({ onClose }) => {
     const [ isLoading, setIsLoading ] = useState(false);
     const [ linkCopied, setLinkCopied ] = useState(false);
     const [ userInvited, setUserInvited ] = useState(false);
