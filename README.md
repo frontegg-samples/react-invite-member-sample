@@ -17,8 +17,6 @@ The invite dialog includes 2 differrent invite methods - invite by email or invi
 2. Invite by email will be done by submitting the form. In this sample, the form includes an email field which is required, therefore the user will not be able to submit the form unless filling a valid email, and a name field which is optional. 
 You will be also able to simply add a role field based on the code you will find while sending the request. In this sample we skipped the role field, and sending an Admin role as a default for any invite request.
 
-### Code Samples
-
 #### Copy invite link method
 
 ```ts
@@ -67,6 +65,95 @@ return (<Button
     );
 };
 ```
+
+#### Invite by an email method
+
+```ts
+export const InviteModal = ({ onClose }) => {
+    const [ isLoading, setIsLoading ] = useState(false);
+    const [ userInvited, setUserInvited ] = useState(false);
+    const [ inviteError, setInviteError ] = useState<string | undefined>();
+    const { addUser } = useAuthActions();
+    const { roles } = useAuthTeamState();
+    const { loadRoles } = useAuthTeamActions();
+
+    const initialValue = useMemo(
+        () => ({
+            name: '',
+            email: '',
+        }),
+        []
+    );
+
+    const handleInvite = useCallback(
+        ({ name, email } : any, { resetForm } : any) => {
+            setInviteError(undefined);
+            setIsLoading(true);
+            addUser({
+                name,
+                email,
+                roleIds: roles.filter(({key}) => key.toLowerCase() === 'admin').map(({id}) => id), // Specify the role to assign to the invited user from your application roles
+                callback: (response, error) => {
+                    setIsLoading(false);
+                    setInviteError(error);
+                    if (!error) {
+                        setUserInvited(true);
+                        resetForm()
+                        setTimeout(() => setUserInvited(false), 5000);
+                    }
+                },
+            });
+
+        },
+        [addUser, roles, setUserInvited, setIsLoading, setInviteError]
+    );
+
+    useEffect(() => {
+        loadRoles();
+    }, [getInvitationLink, loadRoles])
+
+    return (
+        <Formik initialValues={initialValue} onSubmit={handleInvite}>
+            {({dirty, isValid, values, errors, handleSubmit, handleBlur, handleChange} : any) => {
+                return (
+                    <form onSubmit={handleSubmit}>
+                        <Input
+                            name="name"
+                            autoFocus
+                            placeholder={'Enter name'}
+                            size="small"
+                            value={values.name}
+                            error={dirty && !!errors.name}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                        />
+                        <Input
+                            name={'email'}
+                            placeholder={'Enter email address'}
+                            size="small"
+                            value={values.email}
+                            error={(dirty && !!errors.email) || !!inviteError}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                        />
+                        <InviteButtonStyled
+                                isSent={userInvited}
+                                color={'primary'}
+                                variant="contained"
+                                disabled={!userInvited && (!dirty || !isValid)}
+                                type="submit"
+                            >
+                                {userInvited ? 'Sent!' : 'Invite'}
+                        </InviteButtonStyled>
+                    </form>
+                );
+            }}
+        </Formik>
+    );
+};
+
+```
+
 
 ## Learn More
 
