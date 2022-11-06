@@ -92,7 +92,8 @@ export const InviteModal = ({ onClose }) => {
             addUser({
                 name,
                 email,
-                roleIds: roles.filter(({key}) => key.toLowerCase() === 'admin').map(({id}) => id), // Specify the role to assign to the invited user from your application roles
+                 // Specify the role you want to assign the invited user to, from your application roles
+                roleIds: roles.filter(({key}) => key.toLowerCase() === 'admin').map(({id}) => id),
                 callback: (response, error) => {
                     setIsLoading(false);
                     setInviteError(error);
