@@ -1,43 +1,159 @@
-# Getting Started with Create React App
+# Getting Started
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This sample is demonstrating how you can simply implement your own invite a member dialog using our custom hooks. In this sample we are using our suggestion of a button opening a dialog using a friendlly UX UI.
 
-## Available Scripts
-
-In the project directory, you can run:
+You will be able to use the simple logic from this sample to immplement it with your own UX UI.
 
 ### `npm start`
 
 Runs the app in the development mode.\
 Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+You will first need to login by clicking the relevant button, and once you will be logged in you will be able to click the invite member button and see the invite dialog modal.
 
-### `npm test`
+The invite dialog includes 2 differrent invite methods - invite by email or invite by link.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+1. Invite by link will be easilly done by clicking the copy link button.
+2. Invite by email will be done by submitting the form. In this sample, the form includes an email field which is required, therefore the user will not be able to submit the form unless filling a valid email, and a name field which is optional. 
+You will be also able to simply add a role field based on the code you will find while sending the request. In this sample we skipped the role field, and sending an Admin role as a default for any invite request.
 
-### `npm run build`
+#### Copy invite link method
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```ts
+import { useCallback, useState, useEffect } from 'react';
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+export const InviteModal = ({ onClose }) => {
+const [ linkCopied, setLinkCopied ] = useState(false);
+const { inviteTokenState } = useAuthTeamState();
+const { createInvitationLink, getInvitationLink } = useAuthTeamActions();
+const routes = useAuthRoutes();
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+const handleCreateInviteLink = useCallback(() => {
+        const handleLink = (token: string | undefined | null) => {
+            copy(token ? `${window.location.origin}${routes.signUpUrl}?invitationToken=${token}` : '');
+            setLinkCopied(true);
+            setTimeout(() => setLinkCopied(false), 5000);
+        };
 
-### `npm run eject`
+        if (inviteTokenState?.token) {
+            handleLink(inviteTokenState?.token);
+            return;
+        }
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+        createInvitationLink({
+            callback: (createdToken, error) => {
+                getInvitationLink();
+                if (!error) {
+                    handleLink(createdToken);
+                }
+            },
+        });
+    }, [routes.signUpUrl, inviteTokenState, getInvitationLink, createInvitationLink]);
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+useEffect(() => {
+    getInvitationLink();
+}, [getInvitationLink])
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+return (<Button
+            variant="text"
+            startIcon={linkCopied ? <CheckIcon fontSize="small"/> :
+                <AttachmentIcon fontSize="small"/>}
+            onClick={handleCreateInviteLink}
+        >
+            {linkCopied ? 'Copied!' : 'Copy invite link'}
+        </Button>                        
+    );
+};
+```
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+#### Invite by an email method
+
+```ts
+export const InviteModal = ({ onClose }) => {
+    const [ isLoading, setIsLoading ] = useState(false);
+    const [ userInvited, setUserInvited ] = useState(false);
+    const [ inviteError, setInviteError ] = useState<string | undefined>();
+    const { addUser } = useAuthActions();
+    const { roles } = useAuthTeamState();
+    const { loadRoles } = useAuthTeamActions();
+
+    const initialValue = useMemo(
+        () => ({
+            name: '',
+            email: '',
+        }),
+        []
+    );
+
+    const handleInvite = useCallback(
+        ({ name, email } : any, { resetForm } : any) => {
+            setInviteError(undefined);
+            setIsLoading(true);
+            addUser({
+                name,
+                email,
+                roleIds: roles.filter(({key}) => key.toLowerCase() === 'admin').map(({id}) => id), // Specify the role to assign to the invited user from your application roles
+                callback: (response, error) => {
+                    setIsLoading(false);
+                    setInviteError(error);
+                    if (!error) {
+                        setUserInvited(true);
+                        resetForm()
+                        setTimeout(() => setUserInvited(false), 5000);
+                    }
+                },
+            });
+
+        },
+        [addUser, roles, setUserInvited, setIsLoading, setInviteError]
+    );
+
+    useEffect(() => {
+        loadRoles();
+    }, [getInvitationLink, loadRoles])
+
+    return (
+        <Formik initialValues={initialValue} onSubmit={handleInvite}>
+            {({dirty, isValid, values, errors, handleSubmit, handleBlur, handleChange} : any) => {
+                return (
+                    <form onSubmit={handleSubmit}>
+                        <Input
+                            name="name"
+                            autoFocus
+                            placeholder={'Enter name'}
+                            size="small"
+                            value={values.name}
+                            error={dirty && !!errors.name}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                        />
+                        <Input
+                            name={'email'}
+                            placeholder={'Enter email address'}
+                            size="small"
+                            value={values.email}
+                            error={(dirty && !!errors.email) || !!inviteError}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                        />
+                        <InviteButtonStyled
+                                isSent={userInvited}
+                                color={'primary'}
+                                variant="contained"
+                                disabled={!userInvited && (!dirty || !isValid)}
+                                type="submit"
+                            >
+                                {userInvited ? 'Sent!' : 'Invite'}
+                        </InviteButtonStyled>
+                    </form>
+                );
+            }}
+        </Formik>
+    );
+};
+
+```
+
 
 ## Learn More
 
