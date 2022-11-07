@@ -66,7 +66,7 @@ const InviteButtonStyled = styled(Button)<InviteButtonStyledProps>(({isSent, the
     },
 }));
 
-export const InviteModal = ({ onClose }) => {
+export const InviteModal = ({ onClose }: any) => {
     const [ isLoading, setIsLoading ] = useState(false);
     const [ linkCopied, setLinkCopied ] = useState(false);
     const [ userInvited, setUserInvited ] = useState(false);
