@@ -1,13 +1,13 @@
-import { useCallback, useState, VFC, useMemo, useEffect } from 'react';
-import { useAuthActions, useAuthRoutes, useAuthTeamActions, useAuthTeamState } from '@frontegg/react';
+import {useCallback, useState, VFC, useMemo, useEffect} from 'react';
+import {useAuthActions, useAuthRoutes, useAuthTeamActions, useAuthTeamState} from '@frontegg/react';
 import copy from 'clipboard-copy';
 import * as React from 'react';
-import {ButtonProps, styled, Grid, Button, Typography, Input, Box, CircularProgress} from '@mui/material';
+import {styled, Grid, Button, Typography, Input, Box, CircularProgress} from '@mui/material';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import AttachmentIcon from '@mui/icons-material/Attachment';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
-import { Formik } from 'formik';
+import {Formik} from 'formik';
 import {validateEmail, validateSchema} from "./validations";
 
 interface InviteModalProps {
@@ -52,30 +52,36 @@ const FooterStyled = styled(Grid)({
     paddingTop: '1rem',
 });
 
-interface InviteButtonStyledProps extends ButtonProps {
-    isSent: boolean;
-}
-
-const InviteButtonStyled = styled(Button)<InviteButtonStyledProps>(({isSent, theme}) => ({
+const InviteButtonStyled = styled(Button)(({theme}) => ({
     textTransform: 'none',
     fontSize: '0.875rem',
     '&.MuiButton-root:not(:disabled)': {
         transition: 'background-color .2s ease-in',
-        backgroundColor: isSent ? theme.palette.success.light : theme.palette.primary.main,
-        borderColor: isSent ? theme.palette.success.light : theme.palette.primary.main,
+        backgroundColor: theme.palette.primary.main,
+        borderColor: theme.palette.primary.main,
     },
 }));
 
-export const InviteModal: VFC<InviteModalProps> = ({ onClose }) => {
-    const [ isLoading, setIsLoading ] = useState(false);
-    const [ linkCopied, setLinkCopied ] = useState(false);
-    const [ userInvited, setUserInvited ] = useState(false);
-    const [ inviteError, setInviteError ] = useState<string | undefined>();
-    const { addUser } = useAuthActions();
+const InviteSentButtonStyled = styled(Button)(({theme}) => ({
+    textTransform: 'none',
+    fontSize: '0.875rem',
+    '&.MuiButton-root:not(:disabled)': {
+        transition: 'background-color .2s ease-in',
+        backgroundColor: theme.palette.success.light,
+        borderColor: theme.palette.success.light,
+    },
+}));
+
+export const InviteModal: VFC<InviteModalProps> = ({onClose}) => {
+    const [isLoading, setIsLoading] = useState(false);
+    const [linkCopied, setLinkCopied] = useState(false);
+    const [userInvited, setUserInvited] = useState(false);
+    const [inviteError, setInviteError] = useState<string | undefined>();
+    const {addUser} = useAuthActions();
     const routes = useAuthRoutes();
-    const { inviteTokenState } = useAuthTeamState();
-    const { roles } = useAuthTeamState();
-    const { loadRoles, createInvitationLink, getInvitationLink } = useAuthTeamActions();
+    const {inviteTokenState} = useAuthTeamState();
+    const {roles} = useAuthTeamState();
+    const {loadRoles, createInvitationLink, getInvitationLink} = useAuthTeamActions();
 
     const initialValue = useMemo(
         () => ({
@@ -116,7 +122,7 @@ export const InviteModal: VFC<InviteModalProps> = ({ onClose }) => {
     }, [routes.signUpUrl, inviteTokenState, getInvitationLink, createInvitationLink]);
 
     const handleInvite = useCallback(
-        ({ name, email } : any, { resetForm } : any) => {
+        ({name, email}: any, {resetForm}: any) => {
             setInviteError(undefined);
             setIsLoading(true);
             addUser({
@@ -145,7 +151,7 @@ export const InviteModal: VFC<InviteModalProps> = ({ onClose }) => {
 
     return (
         <Formik initialValues={initialValue} validationSchema={validationSchema} onSubmit={handleInvite}>
-            {({dirty, isValid, values, errors, handleSubmit, handleBlur, handleChange} : any) => {
+            {({dirty, isValid, values, errors, handleSubmit, handleBlur, handleChange}: any) => {
                 return (
                     <form onSubmit={handleSubmit}>
                         <InviteModalStyled container>
@@ -186,22 +192,27 @@ export const InviteModal: VFC<InviteModalProps> = ({ onClose }) => {
                                         startIcon={linkCopied ? <CheckIcon fontSize="small"/> :
                                             <AttachmentIcon fontSize="small"/>}
                                         onClick={handleCreateInviteLink}
-                                        sx={{ marginLeft: '-4px', fontSize: '14px', textTransform: 'none' }}
+                                        sx={{marginLeft: '-4px', fontSize: '14px', textTransform: 'none'}}
                                     >
                                         {linkCopied ? 'Copied!' : 'Copy invite link'}
                                     </Button>
                                 </Grid>
                                 <Grid item>
-                                    <InviteButtonStyled
-                                        isSent={userInvited}
-                                        color={'primary'}
-                                        variant="contained"
-                                        disabled={!userInvited && (!dirty || !isValid)}
-                                        type="submit"
-                                        startIcon={isLoading? <CircularProgress style={{ maxWidth: '15px', maxHeight: '15px', color: 'white' }}/> : undefined}
-                                    >
-                                        {userInvited ? 'Sent!' : 'Invite'}
-                                    </InviteButtonStyled>
+                                    {userInvited ?
+                                        <InviteSentButtonStyled variant="contained">{'Sent!'}</InviteSentButtonStyled> :
+                                        <InviteButtonStyled
+                                            color={'primary'}
+                                            variant="contained"
+                                            disabled={!dirty || !isValid}
+                                            type="submit"
+                                            startIcon={isLoading ? <CircularProgress style={{
+                                                maxWidth: '15px',
+                                                maxHeight: '15px',
+                                                color: 'white'
+                                            }}/> : undefined}
+                                        >
+                                            {'Invite'}
+                                        </InviteButtonStyled>}
                                 </Grid>
                             </FooterStyled>
                         </InviteModalStyled>

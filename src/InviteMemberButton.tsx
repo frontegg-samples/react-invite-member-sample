@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { styled, Typography, Button, Box } from '@mui/material';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
-import { InviteModal } from './InviteMemberModel'
+import { InviteModal } from './InviteMemberModal'
 
 const InviteButtonContainerStyled = styled(Box)({
     position: 'absolute',
