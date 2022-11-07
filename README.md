@@ -1,9 +1,10 @@
 # Getting Started
 
-This sample is demonstrating how you can simply implement your own invite a member dialog using our custom hooks. In this sample we are using our suggestion of a button opening a dialog using a friendlly UX UI.
+This sample is demonstrating how you can simply implement your own invite a member dialog using Frontegg's custom hooks. In this sample we are using our suggestion of a button opening a dialog using a friendlly UX UI.
 
 You will be able to use the simple logic from this sample to immplement it with your own UX UI.
 
+### `npm install`
 ### `npm start`
 
 Runs the app in the development mode.\
